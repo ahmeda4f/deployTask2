@@ -8,8 +8,6 @@ import pandas as pd
 
 st.title("Parking Space Detection App")
 model = YOLO("best (1).pt")
-model.names = {0: "Empty", 1: "Occupied"}
-
 conf_threshold = st.slider("Confidence Threshold", 0.0, 1.0, 0.25)
 
 uploaded_file = st.file_uploader("Upload an image or video", type=["jpg", "jpeg", "png", "mp4", "avi"])
