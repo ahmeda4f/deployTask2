@@ -7,8 +7,7 @@ import os
 import pandas as pd
 
 st.title("Parking Space Detection App")
-
-model = YOLO("best(1).pt")
+model = YOLO("best (1).pt")
 
 conf_threshold = st.slider("Confidence Threshold", 0.0, 1.0, 0.25)
 
