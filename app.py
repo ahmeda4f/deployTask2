@@ -1,0 +1,59 @@
+import streamlit as st
+from ultralytics import YOLO
+from PIL import Image
+import cv2
+import tempfile
+import os
+import pandas as pd
+
+st.title("Parking Space Detection App")
+
+model = YOLO("best.pt")
+
+conf_threshold = st.slider("Confidence Threshold", 0.0, 1.0, 0.25)
+
+uploaded_file = st.file_uploader("Upload an image or video", type=["jpg", "jpeg", "png", "mp4", "avi"])
+
+if uploaded_file is not None:
+    if uploaded_file.type.startswith("image"):
+        image = Image.open(uploaded_file)
+        results = model.predict(image, conf=conf_threshold)
+        annotated_image = Image.fromarray(results[0].plot())
+        st.image(annotated_image, caption="Detected Parking Spaces", use_column_width=True)
+
+        boxes = results[0].boxes.xyxy.cpu().numpy()
+        scores = results[0].boxes.conf.cpu().numpy()
+        classes = results[0].boxes.cls.cpu().numpy()
+        if len(boxes) > 0:
+            df = pd.DataFrame({
+                "x1": boxes[:,0], "y1": boxes[:,1],
+                "x2": boxes[:,2], "y2": boxes[:,3],
+                "confidence": scores, "class": classes
+            })
+            st.dataframe(df)
+
+    elif uploaded_file.type.startswith("video"):
+        tfile = tempfile.NamedTemporaryFile(delete=False)
+        tfile.write(uploaded_file.read())
+        cap = cv2.VideoCapture(tfile.name)
+
+        fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+        output_path = "output.mp4"
+        out = None
+
+        while True:
+            ret, frame = cap.read()
+            if not ret:
+                break
+            frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+            results = model.predict(frame_rgb, conf=conf_threshold)
+            annotated_frame = cv2.cvtColor(results[0].plot(), cv2.COLOR_RGB2BGR)
+            if out is None:
+                h, w, _ = annotated_frame.shape
+                out = cv2.VideoWriter(output_path, fourcc, 20.0, (w, h))
+            out.write(annotated_frame)
+
+        cap.release()
+        out.release()
+        st.video(output_path)
+        os.remove(tfile.name)
