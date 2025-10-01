@@ -69,5 +69,18 @@ if uploaded_file is not None:
 
         cap.release()
         out.release()
-        st.video(output_path)
+
+        with open(output_path, "rb") as f:
+            video_bytes = f.read()
+
+        st.video(video_bytes)
+
+        st.download_button(
+            label="Download Processed Video",
+            data=video_bytes,
+            file_name="processed_output.mp4",
+            mime="video/mp4"
+        )
+
         os.remove(tfile.name)
+        os.remove(output_path)
