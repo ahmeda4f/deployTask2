@@ -1,7 +1,4 @@
-streamlit
 ultralytics
-opencv-python-headless
 pillow
+opencv-python-headless
 pandas
-torch
-torchvision
